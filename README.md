@@ -15,8 +15,6 @@ A native macOS menu bar app that transforms the notch into a music player, file 
 [![Release](https://img.shields.io/github/v/release/quietapps/QuietNotch?display_name=tag)](https://github.com/quietapps/QuietNotch/releases)
 [![Downloads](https://img.shields.io/github/downloads/quietapps/QuietNotch/total.svg)](https://github.com/quietapps/QuietNotch/releases)
 [![Stars](https://img.shields.io/github/stars/quietapps/QuietNotch?style=social)](https://github.com/quietapps/QuietNotch/stargazers)
-[![Crowdin](https://badges.crowdin.net/quiet-notch/localized.svg)](https://crowdin.com/project/quiet-notch)
-[![Discord](https://dcbadge.limes.pink/api/server/c8JXA7qrPm?style=flat)](https://discord.gg/c8JXA7qrPm)
 
 [Download](#installation) · [Features](#features) · [Usage](#usage) · [Build from source](#build-from-source) · [Contributing](#contributing) · [FAQ](#faq)
 
@@ -349,7 +347,7 @@ Quiet Notch stands on the shoulders of the open-source community:
 - **[KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts)**, **[Defaults](https://github.com/sindresorhus/Defaults)**, **[Sparkle](https://sparkle-project.org)** — workhorse libraries that make the app feel native
 
 Icon credits: [@maxtron95](https://github.com/maxtron95) (Classic). Default icon by Quiet Apps.
-Original website credits: [@himanshhhhuv](https://github.com/himanshhhhuv).
+
 
 For a full list of licenses and attributions, see [THIRD_PARTY_LICENSES](./THIRD_PARTY_LICENSES).
 
