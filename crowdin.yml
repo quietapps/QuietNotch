@@ -1,0 +1,4 @@
+files:
+  - source: /quietNotch/Localizable.xcstrings
+    translation: /quietNotch/Localizable.xcstrings
+    multilingual: 1
