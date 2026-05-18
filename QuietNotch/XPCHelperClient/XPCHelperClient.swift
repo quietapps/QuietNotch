@@ -241,6 +241,70 @@ final class XPCHelperClient: NSObject {
             return false
         }
     }
+
+    nonisolated func currentScreenBrightness(forDisplayID displayID: UInt32) async -> Float? {
+        do {
+            let service = await MainActor.run {
+                ensureRemoteService()
+            }
+            let result: NSNumber? = try await service.withContinuation { service, continuation in
+                service.currentScreenBrightness(forDisplayID: displayID) { value in
+                    continuation.resume(returning: value)
+                }
+            }
+            return result?.floatValue
+        } catch {
+            return nil
+        }
+    }
+
+    nonisolated func setScreenBrightness(_ value: Float, forDisplayID displayID: UInt32) async -> Bool {
+        do {
+            let service = await MainActor.run {
+                ensureRemoteService()
+            }
+            return try await service.withContinuation { service, continuation in
+                service.setScreenBrightness(value, forDisplayID: displayID) { success in
+                    continuation.resume(returning: success)
+                }
+            }
+        } catch {
+            return false
+        }
+    }
+
+    nonisolated func dismissNativeOSD() async -> Bool {
+        do {
+            let service = await MainActor.run {
+                ensureRemoteService()
+            }
+            return try await service.withContinuation { service, continuation in
+                service.dismissNativeOSD { ok in
+                    continuation.resume(returning: ok)
+                }
+            }
+        } catch {
+            return false
+        }
+    }
+
+    /// Fire-and-forget variant for hot paths like brightness key polling
+    /// where the caller doesn't want to await an XPC roundtrip.
+    ///
+    /// The native macOS bezel HUD may begin rendering slightly before our
+    /// poll detects the brightness change and again right after we kill the
+    /// helper (if macOS respawns + redraws). We fire a short burst so the
+    /// HUD is dismissed across a ~400ms window.
+    nonisolated func dismissNativeOSDFireAndForget() {
+        Task.detached { [weak self] in
+            guard let self else { return }
+            _ = await self.dismissNativeOSD()
+            try? await Task.sleep(nanoseconds: 120_000_000)
+            _ = await self.dismissNativeOSD()
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            _ = await self.dismissNativeOSD()
+        }
+    }
 }
 
 extension Notification.Name {

@@ -16,9 +16,14 @@ import Foundation
     func isKeyboardBrightnessAvailable(with reply: @escaping (Bool) -> Void)
     func currentKeyboardBrightness(with reply: @escaping (NSNumber?) -> Void)
     func setKeyboardBrightness(_ value: Float, with reply: @escaping (Bool) -> Void)
-    // Screen brightness access (performed by the helper)
+    // Screen brightness access (performed by the helper).
+    // Single-display methods operate on CGMainDisplayID(); per-display
+    // methods accept a CGDirectDisplayID (passed as UInt32).
     func isScreenBrightnessAvailable(with reply: @escaping (Bool) -> Void)
     func currentScreenBrightness(with reply: @escaping (NSNumber?) -> Void)
     func setScreenBrightness(_ value: Float, with reply: @escaping (Bool) -> Void)
+    func currentScreenBrightness(forDisplayID displayID: UInt32, with reply: @escaping (NSNumber?) -> Void)
+    func setScreenBrightness(_ value: Float, forDisplayID displayID: UInt32, with reply: @escaping (Bool) -> Void)
+    func dismissNativeOSD(with reply: @escaping (Bool) -> Void)
 }
 

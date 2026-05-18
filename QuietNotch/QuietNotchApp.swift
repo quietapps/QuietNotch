@@ -284,6 +284,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AppIconManager.shared.applyCurrentChoice()
         AppIconManager.shared.startObserving()
 
+        // Touch singletons so their pollers/observers start at launch.
+        // Without this, BrightnessManager would only begin polling after the
+        // user first triggered an HUD-related code path — so the very first
+        // brightness key press would be missed.
+        _ = BrightnessManager.shared
+        _ = KeyboardBacklightManager.shared
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),

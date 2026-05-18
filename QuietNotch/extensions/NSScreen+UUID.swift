@@ -9,6 +9,14 @@ import AppKit
 import CoreGraphics
 
 extension NSScreen {
+    /// Returns the CGDirectDisplayID for this screen, if available.
+    var displayID: CGDirectDisplayID? {
+        guard let number = deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+            return nil
+        }
+        return CGDirectDisplayID(number.uint32Value)
+    }
+
     /// Returns a persistent UUID for this display
     var displayUUID: String? {
         guard let number = deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {

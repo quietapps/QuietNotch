@@ -43,7 +43,7 @@ struct QuietExtrasMenu : View {
     var github: some View {
         QuietLargeButtons(
             action: {
-                if let url = URL(string: "https://github.com/TheBoredTeam/quiet.notch") {
+                if let url = URL(string: "https://github.com/quietapps/QuietNotch") {
                     NSWorkspace.shared.open(url)
                 }
             },

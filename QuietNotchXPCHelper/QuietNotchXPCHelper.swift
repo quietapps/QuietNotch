@@ -125,12 +125,84 @@ class QuietNotchXPCHelper: NSObject, QuietNotchXPCHelperProtocol {
     }
 
     @objc func setScreenBrightness(_ value: Float, with reply: @escaping (Bool) -> Void) {
+        setScreenBrightness(value, forDisplayID: CGMainDisplayID(), with: reply)
+    }
+
+    @objc func currentScreenBrightness(forDisplayID displayID: UInt32, with reply: @escaping (NSNumber?) -> Void) {
+        let id = CGDirectDisplayID(displayID)
+        var b: Float = 0
+        if displayServicesGetBrightness(displayID: id, out: &b) {
+            reply(NSNumber(value: b))
+            return
+        }
+        if let io = ioServiceFor(displayID: id) {
+            var level: Float = 0
+            if IODisplayGetFloatParameter(io, 0, kIODisplayBrightnessKey as CFString, &level) == kIOReturnSuccess {
+                IOObjectRelease(io)
+                reply(NSNumber(value: level))
+                return
+            }
+            IOObjectRelease(io)
+        }
+        reply(nil)
+    }
+
+    @objc func dismissNativeOSD(with reply: @escaping (Bool) -> Void) {
+        // Kill OSDUIHelper — the user-session process responsible for
+        // drawing the macOS brightness / volume bezel HUD. It auto-respawns
+        // on next request, so the only observable effect is dismissing the
+        // HUD that is currently visible. We use the BSD `kill` syscall
+        // directly so we don't have to spawn `/usr/bin/killall`.
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
+        var size: size_t = 0
+        guard sysctl(&mib, 4, nil, &size, nil, 0) == 0, size > 0 else {
+            reply(false); return
+        }
+        let count = size / MemoryLayout<kinfo_proc>.stride
+        var procs = [kinfo_proc](repeating: kinfo_proc(), count: count)
+        let ok = procs.withUnsafeMutableBufferPointer { buf -> Bool in
+            var s = size
+            return sysctl(&mib, 4, buf.baseAddress, &s, nil, 0) == 0
+        }
+        guard ok else { reply(false); return }
+        // Across macOS versions, the native brightness / volume / caps-lock
+        // bezel HUD has been drawn by different daemons:
+        //   * "OSDUIHelper"  — classic / older
+        //   * "BezelUI"      — newer
+        //   * "BezelServices"/"OSDHelper" — internal variants
+        // Match by substring on case-insensitive "osd"/"bezel" to catch any
+        // future rename. Killing dismisses the currently-visible HUD; macOS
+        // respawns the process on next request.
+        let needles = ["osd", "bezel"]
+        let myPID = getpid()
+        var didKill = false
+        for p in procs {
+            let pid = p.kp_proc.p_pid
+            if pid == myPID { continue }
+            var comm = p.kp_proc.p_comm
+            let commSize = MemoryLayout.size(ofValue: comm)
+            let name = withUnsafePointer(to: &comm) { tuplePtr -> String in
+                tuplePtr.withMemoryRebound(to: CChar.self, capacity: commSize) {
+                    String(cString: $0)
+                }
+            }
+            let lower = name.lowercased()
+            if needles.contains(where: { lower.contains($0) }) {
+                _ = kill(pid, SIGKILL)
+                didKill = true
+            }
+        }
+        reply(didKill)
+    }
+
+    @objc func setScreenBrightness(_ value: Float, forDisplayID displayID: UInt32, with reply: @escaping (Bool) -> Void) {
+        let id = CGDirectDisplayID(displayID)
         let clamped = max(0, min(1, value))
-        if displayServicesSetBrightness(displayID: CGMainDisplayID(), value: clamped) {
+        if displayServicesSetBrightness(displayID: id, value: clamped) {
             reply(true)
             return
         }
-        if let io = ioServiceFor(displayID: CGMainDisplayID()) {
+        if let io = ioServiceFor(displayID: id) {
             let ok = IODisplaySetFloatParameter(io, 0, kIODisplayBrightnessKey as CFString, clamped) == kIOReturnSuccess
             IOObjectRelease(io)
             reply(ok)
